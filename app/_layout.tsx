@@ -9,6 +9,8 @@ export const unstable_settings = {
   anchor: '(tabs)',
 };
 
+export const baseURL = "http://192.168.29.12:8081";
+
 export default function RootLayout() {
   const colorScheme = useColorScheme();
 
@@ -16,6 +18,7 @@ export default function RootLayout() {
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
       <Stack>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen name="src" options={{ headerShown: false }} />
         <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
       </Stack>
       <StatusBar style="auto" />
