@@ -44,13 +44,25 @@
 
 import { Text, View, StyleSheet, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
+import * as SecureStore from "expo-secure-store";
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 
 import { colors, spacing, radius, shadows, typography } from '@/src/theme';
+import { useEffect } from 'react';
 
 export default function Welcome() {
   const router = useRouter();
+
+   useEffect(() => {
+    const checkLogin = async () => {
+      const userName = await SecureStore.getItemAsync("mobile");
+      if (userName) {
+        router.replace("/(user)/dashboard");
+      }
+    };
+    checkLogin();
+  }, []);
 
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>

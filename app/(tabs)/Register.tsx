@@ -19,16 +19,62 @@ import {
   TextInput,
   TouchableOpacity,
   ScrollView,
+  Alert,
 } from "react-native";
 
 import { router } from "expo-router";
-
+import axios from 'axios';
 import Ionicons from "@expo/vector-icons/Ionicons";
 import Feather from "@expo/vector-icons/Feather";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
+import { baseURL } from "../_layout";
 
 export default function Register() {
-  const [accountType, setAccountType] = useState("Resident");
+  const [accountType, setAccountType] = useState("RESIDENT");
+   const [showPassword, setShowPassword] = useState(false);
+   const [fullName, setFullName] = useState('');
+  const [email, setEmail] = useState('');
+  const [mobile, setMobile] = useState('');
+   const [password,setPassword] = useState('');
+   const [apartmentName, setApartmentName] = useState('');
+  const [flatNumber, setFlatNumber] = useState('');
+ 
+
+  const handleRegister=()=>{
+if (!fullName) return Alert.alert("Error", "Enter name");
+    if (!mobile) return Alert.alert("Error", "Enter mobile");
+    if (mobile.length !== 10)
+      return Alert.alert("Error", "Mobile must be 10 digits");
+    if (!password) return Alert.alert("Error", "Enter password");
+    if (password.length < 6)
+      return Alert.alert("Error", "Password min 6 chars");
+
+    axios
+      .post(`${baseURL}/Users/UserRegistration`, {
+        name:fullName,
+        mobile,
+        password,
+        email,
+        apartmentName,
+        flatNumber,
+        role:accountType
+      })
+      .then((res) => {
+        Alert.alert("Success", res.data);
+        setFullName("");
+        setMobile("");
+        setPassword("");
+        setEmail("");
+        setApartmentName("");
+        setFlatNumber("");
+      })
+      .catch((err) => {
+        Alert.alert(
+          "Error",
+          err.response?.data?.message || "Server error"
+        );
+      });
+  }
 
   return (
     <ScrollView
@@ -63,10 +109,10 @@ export default function Register() {
         <TouchableOpacity
           style={[
             styles.roleCard,
-            accountType === "Resident" &&
+            accountType === "RESIDENT" &&
               styles.selectedRole,
           ]}
-          onPress={() => setAccountType("Resident")}
+          onPress={() => setAccountType("RESIDENT")}
         >
           <Ionicons
             name="home-outline"
@@ -74,17 +120,17 @@ export default function Register() {
             color="#111"
           />
           <Text style={styles.roleText}>
-            Resident
+            RESIDENT
           </Text>
         </TouchableOpacity>
 
         <TouchableOpacity
           style={[
             styles.roleCard,
-            accountType === "Owner" &&
+            accountType === "OWNER" &&
               styles.selectedRole,
           ]}
-          onPress={() => setAccountType("Owner")}
+          onPress={() => setAccountType("OWNER")}
         >
           <Feather
             name="key"
@@ -92,11 +138,11 @@ export default function Register() {
             color="#111"
           />
           <Text style={styles.roleText}>
-            Owner
+            OWNER
           </Text>
         </TouchableOpacity>
 
-        <TouchableOpacity
+        {/* <TouchableOpacity
           style={[
             styles.roleCard,
             accountType === "Admin" &&
@@ -112,7 +158,7 @@ export default function Register() {
           <Text style={styles.roleText}>
             Admin
           </Text>
-        </TouchableOpacity>
+        </TouchableOpacity> */}
       </View>
 
       {/* Full Name */}
@@ -127,7 +173,9 @@ export default function Register() {
         />
 
         <TextInput
-          placeholder="e.g. Aarav Sharma"
+          placeholder="e.g. Aarav Sharma"   
+value={fullName} 
+onChangeText={setFullName}
           placeholderTextColor="#9A9A9A"
           style={styles.input}
         />
@@ -146,6 +194,7 @@ export default function Register() {
 
         <TextInput
           placeholder="name@email.com"
+          value={email} onChangeText={setEmail}
           placeholderTextColor="#9A9A9A"
           keyboardType="email-address"
           style={styles.input}
@@ -167,7 +216,9 @@ export default function Register() {
 
         <TextInput
           placeholder="10-digit mobile"
+          value={mobile} onChangeText={setMobile}
           placeholderTextColor="#9A9A9A"
+          maxLength={10}
           keyboardType="phone-pad"
           style={styles.input}
         />
@@ -185,11 +236,21 @@ export default function Register() {
         />
 
         <TextInput
-          secureTextEntry
+          secureTextEntry={!showPassword}
           placeholder="At least 6 characters"
+          value={password} onChangeText={setPassword}
           placeholderTextColor="#9A9A9A"
           style={styles.input}
         />
+        <TouchableOpacity
+          onPress={() => setShowPassword(!showPassword)}
+        >
+          <Ionicons
+            name={showPassword ? "eye-off-outline" : "eye-outline"}
+            size={24}
+            color="#666"
+          />
+        </TouchableOpacity>
       </View>
 
       {/* Apartment Name */}
@@ -207,6 +268,7 @@ export default function Register() {
 
         <TextInput
           placeholder="e.g. Skyline Gardens"
+          value={apartmentName} onChangeText={setApartmentName}
           placeholderTextColor="#9A9A9A"
           style={styles.input}
         />
@@ -227,6 +289,7 @@ export default function Register() {
 
         <TextInput
           placeholder="e.g. B-302"
+          value={flatNumber} onChangeText={setFlatNumber}
           placeholderTextColor="#9A9A9A"
           style={styles.input}
         />
@@ -236,6 +299,7 @@ export default function Register() {
 
       <TouchableOpacity
         style={styles.createButton}
+        onPress={handleRegister}
       >
         <Text style={styles.createText}>
           Create Account
@@ -299,7 +363,8 @@ const styles = StyleSheet.create({
 
   roleContainer: {
     flexDirection: "row",
-    justifyContent: "space-between",
+    justifyContent: "center",
+    gap: 50,
     marginBottom: 18,
   },
 

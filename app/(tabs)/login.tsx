@@ -235,7 +235,10 @@ import { useRouter } from "expo-router";
 import Feather from "@expo/vector-icons/Feather";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import React, { useState } from "react";
+import * as SecureStore from "expo-secure-store";
+import axios from "axios";
 import {
+    Alert,
     ScrollView,
     StyleSheet,
     Text,
@@ -243,12 +246,72 @@ import {
     TouchableOpacity,
     View,
 } from "react-native";
+import { baseURL } from "../_layout";
 
 export default function LoginScreen() {
-  const [selectedRole, setSelectedRole] = useState("Resident");
+  const [role, setRole] = useState("RESIDENT");
   const [showPassword, setShowPassword] = useState(false);
+  const [mobile, setMobile]=useState('');
+  const [password,setPassword] = useState('');
+
   const router = useRouter();
 
+   const handleLogin = () => {
+
+    console.log("Login button clicked");
+    if (!mobile) {
+      Alert.alert("Error", "Please enter mobile number");
+      return;
+    }
+    if (mobile.length != 10) {
+      Alert.alert("Error", "Mobile number must be 10 digits");
+      return;
+    }
+    if (!password) {
+      Alert.alert("Error", "Please enter password");
+      return;
+    }
+
+      
+    axios
+      .post(`${baseURL}/Users/UserLogin`, {
+        mobile,
+        password,
+        role
+      })
+      .then(async (response) => {
+        console.log("login clicked");
+        Alert.alert("Success", "Login successful");
+        console.log("Login Response: ", response.data);
+        await SecureStore.setItemAsync("name", response.data.name);
+        await SecureStore.setItemAsync("mobile", mobile);
+        await SecureStore.setItemAsync("userId", response.data.id.toString());
+        await SecureStore.setItemAsync("role", role);
+        await SecureStore.setItemAsync("email", response.data.email);
+         await SecureStore.setItemAsync("apartmentName", response.data.apartmentName);
+          await SecureStore.setItemAsync("flatNumber", response.data.flatNumber.toString());
+
+        console.log("RESPONSE DATA:", response.data);
+        if (role === "OWNER") {
+          router.push("/(owner)/dashboard");
+        }
+        else {
+          router.push("/(user)/dashboard");
+        }   
+      })
+      .catch((error) => {
+        console.log("INSIDE CATCH");
+        console.log(error);
+        if (axios.isAxiosError(error)) {
+    Alert.alert(
+      "Error",
+      error.response?.data?.message || "Login failed"
+    );
+  } else {
+    Alert.alert("Error", String(error));
+  }
+      }); 
+    }
   return (
     <ScrollView
       style={styles.container}
@@ -275,9 +338,9 @@ export default function LoginScreen() {
         <TouchableOpacity
           style={[
             styles.roleCard,
-            selectedRole === "Resident" && styles.selectedRole,
+            role === "RESIDENT" && styles.role,
           ]}
-          onPress={() => setSelectedRole("Resident")}
+          onPress={() => setRole("RESIDENT")}
         >
           <Ionicons name="home-outline" size={24} color="#111" />
           <Text style={styles.roleText}>Resident</Text>
@@ -286,9 +349,9 @@ export default function LoginScreen() {
         <TouchableOpacity
           style={[
             styles.roleCard,
-            selectedRole === "Owner" && styles.selectedRole,
+            role === "OWNER" && styles.role,
           ]}
-          onPress={() => setSelectedRole("Owner")}
+          onPress={() => setRole("OWNER")}
         >
           <Feather name="key" size={22} color="#111" />
           <Text style={styles.roleText}>Owner</Text>
@@ -297,9 +360,9 @@ export default function LoginScreen() {
         <TouchableOpacity
           style={[
             styles.roleCard,
-            selectedRole === "Admin" && styles.selectedRole,
+            role === "ADMIN" && styles.role,
           ]}
-          onPress={() => setSelectedRole("Admin")}
+          onPress={() => setRole("ADMIN")}
         >
           <Ionicons name="shield-checkmark-outline" size={22} color="#111" />
           <Text style={styles.roleText}>Admin</Text>
@@ -314,7 +377,10 @@ export default function LoginScreen() {
         <TextInput
           placeholder="10-digit mobile number"
           placeholderTextColor="#999"
+          value={mobile}
+          onChangeText={setMobile}
           style={styles.input}
+          maxLength={10}
           keyboardType="phone-pad"
         />
       </View>
@@ -328,6 +394,8 @@ export default function LoginScreen() {
         <TextInput
           placeholder="Enter your password"
           placeholderTextColor="#999"
+          value={password}
+          onChangeText={setPassword}
           secureTextEntry={!showPassword}
           style={styles.input}
         />
@@ -353,7 +421,7 @@ export default function LoginScreen() {
      
 
       {/* Login Button */}
-      <TouchableOpacity style={styles.loginButton}>
+      <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
         <Text style={styles.loginText}>Login</Text>
       </TouchableOpacity>
 
@@ -427,7 +495,7 @@ const styles = StyleSheet.create({
     borderColor: "#E5E5E5",
   },
 
-  selectedRole: {
+  role: {
     backgroundColor: "#FFF3DC",
     borderColor: "#111",
   },
